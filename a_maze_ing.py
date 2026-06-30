@@ -12,7 +12,6 @@ class ConfigErorr(Exception):
 class MazeGenerator():
     def __init__(self):
         self._birdview_16: dict[tuple, int] = {}
-        self._birdview_2: dict[tuple, int] = {}
         self._cell: dict[int, list[tuple]] = {}
         self._width: int
         self._height: int
@@ -59,16 +58,12 @@ class MazeGenerator():
     #         return
 
     def set_view_default(self) -> None:
+        # Every cell starts fully walled (15 == 0b1111 == N|E|S|W closed),
+        # and is its own connectivity group so merging can build the maze.
         for y in range(self._height):
             for x in range(self._width):
                 self._birdview_16[x, y] = 15
-        for y in range(self._height):
-            for x in range(self._width):
-                if y % 2 == 0 or x % 2 == 0:
-                    self._birdview_2[x, y] = 0
-                else:
-                    self._birdview_2[x, y] = 1
-                    # 1の時に壁を意味している
+                self._cell[y * self._width + x] = [(x, y)]
 
     def fetch_random_cell_num(self) -> int:
         return random.choice(list(self._cell.keys()))
@@ -77,58 +72,49 @@ class MazeGenerator():
             tuple,
             tuple,
             int] | None:
+        # Find one orthogonally-adjacent pair across the two groups.
+        # They are in different groups, so a wall between them is
+        # guaranteed. Direction 0 == horizontal, 1 == vertical.
         cell1_coordinates: list[tuple] = self._cell[cell1_num]
         cell2_coordinates: list[tuple] = self._cell[cell2_num]
         for coordinate1 in cell1_coordinates:
             for coordinate2 in cell2_coordinates:
-                if coordinate1[0] - coordinate2[0] == 1:
-                    if not all(
-                            (coordinate1[0] - coordinate2[0] in (1, -1),
-                             coordinate1[1] - coordinate2[1] in (1, -1))):
-                        if self._birdview_2[coordinate1[0]*2 - 1] == 1:
-                            return coordinate1, coordinate2, 0
-                if coordinate1[0] - coordinate2[0] == -1:
-                    if not all(
-                            (coordinate1[0] - coordinate2[0] in (1, -1),
-                             coordinate1[1] - coordinate2[1] in (1, -1))):
-                        if self._birdview_2[coordinate2[0]*2 - 1] == 1:
-                            return coordinate1, coordinate2, 0
-                if coordinate1[1] - coordinate2[1] == 1:
-                    if not all(
-                            (coordinate1[0] - coordinate2[0] in (1, -1),
-                             coordinate1[1] - coordinate2[1] in (1, -1))):
-                        if self._birdview_2[coordinate1[1]*2 - 1] == 1:
-                            return coordinate1, coordinate2, 0
-                if coordinate1[1] - coordinate2[1] == -1:
-                    if not all(
-                            (coordinate1[0] - coordinate2[0] in (1, -1),
-                             coordinate1[1] - coordinate2[1] in (1, -1))):
-                        if self._birdview_2[coordinate2[0]*2 - 1] == 1:
-                            return coordinate1, coordinate2, 0
+                dx: int = coordinate1[0] - coordinate2[0]
+                dy: int = coordinate1[1] - coordinate2[1]
+                if dy == 0 and dx in (1, -1):
+                    return coordinate1, coordinate2, 0
+                if dx == 0 and dy in (1, -1):
+                    return coordinate1, coordinate2, 1
+        return None
+
+    def _open_wall(self, cell: tuple, bit: int) -> None:
+        # Clear one wall bit by subtraction, but only if it is still set,
+        # so opening an already-open wall can never corrupt the value.
+        if self._birdview_16[cell] & bit:   # bit currently closed?
+            self._birdview_16[cell] = self._birdview_16[cell] - bit
 
     def horz_break(self, cells: tuple[tuple, tuple, int]) -> None:
-        x1: int = cells[0][0]
-        x2: int = cells[1][0]
-        if x1 < x2:
-            self._birdview_16[x1] = self._birdview_16[x1] - 2
-            self._birdview_16[x2] = self._birdview_16[x2] - 8
-            self._birdview_2[x1*2+1] = 0
+        # Open the East/West wall between two horizontally-adjacent cells.
+        cell1: tuple = cells[0]
+        cell2: tuple = cells[1]
+        if cell1[0] < cell2[0]:
+            self._open_wall(cell1, 2)   # cell1 East
+            self._open_wall(cell2, 8)   # cell2 West
         else:
-            self._birdview_16[x1] = self._birdview_16[x1] - 8
-            self._birdview_16[x2] = self._birdview_16[x2] - 2
-            self._birdview_2[x1*2-1] = 0
+            self._open_wall(cell1, 8)   # cell1 West
+            self._open_wall(cell2, 2)   # cell2 East
 
     def vert_break(self, cells: tuple[tuple, tuple, int]) -> None:
-        y1: int = cells[0][1]
-        y2: int = cells[1][1]
-        if y1 < y2:
-            self._birdview_16[y1] = self._birdview_16[y1] - 4
-            self._birdview_16[y2] = self._birdview_16[y2] - 1
-            self._birdview_2[y1*2+1] = 0
+        # Open the North/South wall between two vertically-adjacent cells.
+        # y grows downward, so the smaller-y cell is the upper one.
+        cell1: tuple = cells[0]
+        cell2: tuple = cells[1]
+        if cell1[1] < cell2[1]:
+            self._open_wall(cell1, 4)   # cell1 South
+            self._open_wall(cell2, 1)   # cell2 North
         else:
-            self._birdview_16[y1] = self._birdview_16[y1] - 1
-            self._birdview_16[y2] = self._birdview_16[y2] - 4
-            self._birdview_2[y1*2-1] = 0
+            self._open_wall(cell1, 1)   # cell1 North
+            self._open_wall(cell2, 4)   # cell2 South
 
     def manage_cell_num(self, key1: int, key2: int) -> None:
         if key1 < key2:
@@ -166,6 +152,8 @@ if __name__ == "__main__":
         while True:
             key1: int = tst_gen.fetch_random_cell_num()
             key2: int = tst_gen.fetch_random_cell_num()
+            if key1 == key2:
+                continue
 
             result: tuple[
                 tuple,
