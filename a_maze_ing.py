@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-
+import random
 
 class ConfigErorr(Exception):
     def __init__(self, message: str = "Config Error") -> None:
@@ -10,9 +10,9 @@ class ConfigErorr(Exception):
 
 class MazeGenerator():
     def __init__(self):
-        self._birdview_16: list[list[int]] = []
-        self._birdview_2: list[list[int]] = []
-        self._cell: dict[tuple[int, int], list[tuple]]
+        self._birdview_16: dict[tuple, int] = []
+        self._birdview_2: dict[tuple, int] = []
+        self._cell: dict[int, list[tuple]]
 
     class MazeData():
         def __init__(self):
@@ -63,15 +63,34 @@ class MazeGenerator():
     def set_view_default(self) -> None:
         for y in range(self._height):
             for x in range(self._width):
-                self._birdview_16[y][x] = 15
+                self._birdview_16[x, y] = 15
         for y in range(self._height):
             for x in range(self._width):
                 if y % 2 == 0 or x % 2 == 0:
-                    self._birdview_2[y][x] = 0
+                    self._birdview_2[x, y] = 0
                 else:
-                    self._birdview_2[y][x] = 1
+                    self._birdview_2[x, y] = 1
 
-    def 
-    def horz_break(self) -> None:
+    def fetch_random_cell_num(self) -> int:
+        return random.choice(self._cell.keys())
 
+    def varidate(self, cell1_num: int, cell2_num: int) -> tuple[tuple, tuple, int] | None:
+        cell1_coordinates: list[tuple] = self._cell[cell1_num]
+        cell2_coordinates: list[tuple] = self._cell[cell2_num]
+        for coordinate1 in cell1_coordinates:
+            for coordinate2 in cell2_coordinates:
+                if (coordinate1[0] - coordinate2[0] == 1 or -1):
+                    if not all(
+                    (coordinate1[0] - coordinate2[0] == 1 or -1),
+                    (coordinate1[1] - coordinate2[1] == 1 or -1)):
+                        return coordinate1, coordinate2, 0
+                if (coordinate1[1] - coordinate2[1] == 1 or -1):
+                    if not all(
+                    (coordinate1[0] - coordinate2[0] == 1 or -1),
+                    (coordinate1[1] - coordinate2[1] == 1 or -1)):
+                        return coordinate1, coordinate2, 1
+                    
+    def horz_break(self, cells: tuple[tuple, tuple, int]) -> None:
+
+        
     def vert_break(self) -> None:
