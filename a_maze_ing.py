@@ -58,8 +58,6 @@ class MazeGenerator():
     #         return
 
     def set_view_default(self) -> None:
-        # Every cell starts fully walled (15 == 0b1111 == N|E|S|W closed),
-        # and is its own connectivity group so merging can build the maze.
         for y in range(self._height):
             for x in range(self._width):
                 self._birdview_16[x, y] = 15
@@ -72,9 +70,6 @@ class MazeGenerator():
             tuple,
             tuple,
             int] | None:
-        # Find one orthogonally-adjacent pair across the two groups.
-        # They are in different groups, so a wall between them is
-        # guaranteed. Direction 0 == horizontal, 1 == vertical.
         cell1_coordinates: list[tuple] = self._cell[cell1_num]
         cell2_coordinates: list[tuple] = self._cell[cell2_num]
         for coordinate1 in cell1_coordinates:
@@ -88,33 +83,28 @@ class MazeGenerator():
         return None
 
     def _open_wall(self, cell: tuple, bit: int) -> None:
-        # Clear one wall bit by subtraction, but only if it is still set,
-        # so opening an already-open wall can never corrupt the value.
-        if self._birdview_16[cell] & bit:   # bit currently closed?
+        if self._birdview_16[cell] & bit:
             self._birdview_16[cell] = self._birdview_16[cell] - bit
 
     def horz_break(self, cells: tuple[tuple, tuple, int]) -> None:
-        # Open the East/West wall between two horizontally-adjacent cells.
         cell1: tuple = cells[0]
         cell2: tuple = cells[1]
         if cell1[0] < cell2[0]:
-            self._open_wall(cell1, 2)   # cell1 East
-            self._open_wall(cell2, 8)   # cell2 West
+            self._open_wall(cell1, 2)
+            self._open_wall(cell2, 8)
         else:
-            self._open_wall(cell1, 8)   # cell1 West
-            self._open_wall(cell2, 2)   # cell2 East
+            self._open_wall(cell1, 8)
+            self._open_wall(cell2, 2)
 
     def vert_break(self, cells: tuple[tuple, tuple, int]) -> None:
-        # Open the North/South wall between two vertically-adjacent cells.
-        # y grows downward, so the smaller-y cell is the upper one.
         cell1: tuple = cells[0]
         cell2: tuple = cells[1]
         if cell1[1] < cell2[1]:
-            self._open_wall(cell1, 4)   # cell1 South
-            self._open_wall(cell2, 1)   # cell2 North
+            self._open_wall(cell1, 4)
+            self._open_wall(cell2, 1)
         else:
-            self._open_wall(cell1, 1)   # cell1 North
-            self._open_wall(cell2, 4)   # cell2 South
+            self._open_wall(cell1, 1)
+            self._open_wall(cell2, 4)
 
     def manage_cell_num(self, key1: int, key2: int) -> None:
         if key1 < key2:
