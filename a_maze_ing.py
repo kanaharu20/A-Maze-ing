@@ -126,6 +126,10 @@ class MazeGenerator():
             for x in range(self._width):
                 output = output+format(self._birdview_16[(x, y)], "x")
             output = output+"\n"
+        output = output+"\n"
+        output = output+f"{self._entry[0]},{self._entry[1]}\n"
+        output = output+f"{self._exit[0]},{self._exit[1]}\n"
+        #ここに解法を記述する
 
         try:
             with open(self._outputfile, "w") as fd:
