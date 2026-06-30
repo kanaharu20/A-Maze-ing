@@ -3,6 +3,7 @@
 import sys
 import random
 
+
 class ConfigErorr(Exception):
     def __init__(self, message: str = "Config Error") -> None:
         super().__init__(message)
@@ -70,35 +71,53 @@ class MazeGenerator():
                     self._birdview_2[x, y] = 0
                 else:
                     self._birdview_2[x, y] = 1
+                    ##1の時に壁を意味している
 
     def fetch_random_cell_num(self) -> int:
         return random.choice(self._cell.keys())
 
-    def varidate(self, cell1_num: int, cell2_num: int) -> tuple[tuple, tuple, int] | None:
+    def varidate(self, cell1_num: int, cell2_num: int) -> tuple[
+                                                        tuple,
+                                                        tuple,
+                                                        int] | None:
         cell1_coordinates: list[tuple] = self._cell[cell1_num]
         cell2_coordinates: list[tuple] = self._cell[cell2_num]
         for coordinate1 in cell1_coordinates:
             for coordinate2 in cell2_coordinates:
                 if (coordinate1[0] - coordinate2[0] == 1 or -1):
                     if not all(
-                    (coordinate1[0] - coordinate2[0] == 1 or -1),
-                    (coordinate1[1] - coordinate2[1] == 1 or -1)):
+                            (coordinate1[0] - coordinate2[0] == 1 or -1),
+                            (coordinate1[1] - coordinate2[1] == 1 or -1)):
                         return coordinate1, coordinate2, 0
                 if (coordinate1[1] - coordinate2[1] == 1 or -1):
                     if not all(
-                    (coordinate1[0] - coordinate2[0] == 1 or -1),
-                    (coordinate1[1] - coordinate2[1] == 1 or -1)):
+                            (coordinate1[0] - coordinate2[0] == 1 or -1),
+                            (coordinate1[1] - coordinate2[1] == 1 or -1)):
                         return coordinate1, coordinate2, 1
-                    
+
     def horz_break(self, cells: tuple[tuple, tuple, int]) -> None:
         x1: int = cells[0][0]
         x2: int = cells[1][0]
         if x1 < x2:
-            self._birdview_16[cells[0]] = self._birdview_16[cells[0]] - 2
-            self._birdview_16[cells[1]] = self._birdview_16[cells[1]] - 8
+            self._birdview_16[x1] = self._birdview_16[x1] - 2
+            self._birdview_16[x2] = self._birdview_16[x2] - 8
+            self._birdview_2[x1*2+1] = 0
         else:
-            self._birdview_16[cells[0]] = self._birdview_16[cells[0]] - 8
-            self._birdview_16[cells[1]] = self._birdview_16[cells[1]] - 2
-        
-    def vert_break(self) -> None:
+            self._birdview_16[x1] = self._birdview_16[x1] - 8
+            self._birdview_16[x2] = self._birdview_16[x2] - 2
+            self._birdview_2[x1*2-1] = 0
 
+    def vert_break(self, cells: tuple[tuple, tuple, int]) -> None:
+        y1: int = cells[0][1]
+        y2: int = cells[1][1]
+        if y1 < y2:
+            self._birdview_16[y1] = self._birdview_16[y1] - 4
+            self._birdview_16[y2] = self._birdview_16[y2] - 1
+            self._birdview_2[y1*2+1] = 0
+        else:
+            self._birdview_16[y1] = self._birdview_16[y1] - 1
+            self._birdview_16[y2] = self._birdview_16[y2] - 4
+            self._birdview_2[y1*2-1] = 0
+
+    def manage_(self, key1: int, key2: int) -> None:
+        
