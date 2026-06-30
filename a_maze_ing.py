@@ -91,6 +91,14 @@ class MazeGenerator():
                         return coordinate1, coordinate2, 1
                     
     def horz_break(self, cells: tuple[tuple, tuple, int]) -> None:
-
+        x1: int = cells[0][0]
+        x2: int = cells[1][0]
+        if x1 < x2:
+            self._birdview_16[cells[0]] = self._birdview_16[cells[0]] - 2
+            self._birdview_16[cells[1]] = self._birdview_16[cells[1]] - 8
+        else:
+            self._birdview_16[cells[0]] = self._birdview_16[cells[0]] - 8
+            self._birdview_16[cells[1]] = self._birdview_16[cells[1]] - 2
         
     def vert_break(self) -> None:
+
