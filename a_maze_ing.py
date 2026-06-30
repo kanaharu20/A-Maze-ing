@@ -11,9 +11,9 @@ class ConfigErorr(Exception):
 
 class MazeGenerator():
     def __init__(self):
-        self._birdview_16: dict[tuple, int] = []
-        self._birdview_2: dict[tuple, int] = []
-        self._cell: dict[int, list[tuple]]
+        self._birdview_16: dict[tuple, int] = {}
+        self._birdview_2: dict[tuple, int] = {}
+        self._cell: dict[int, list[tuple]] = {}
         self._width: int
         self._height: int
         self._entry: tuple[int, int]
@@ -40,19 +40,19 @@ class MazeGenerator():
         entry: list[str] = (config_value[2]).split(",")
         self._entry = int(entry[0]), int(entry[1])
         if (
-                self._entry[0] < 0 or self._width < self._entry[0]
-                or self._entry[1] < 0 or self._height < self._entry[1]
+                self._entry[0] < 0 or self._width <= self._entry[0]
+                or self._entry[1] < 0 or self._height <= self._entry[1]
         ):
             raise ConfigErorr
         exit: list[str] = (config_value[3]).split(",")
         self._exit = int(exit[0]), int(exit[1])
         if (
-                self._exit[0] < 0 or self._width < self._exit[0]
-                or self._exit[1] < 0 or self._height < self._exit[1]
+                self._exit[0] < 0 or self._width <= self._exit[0]
+                or self._exit[1] < 0 or self._height <= self._exit[1]
         ):
             raise ConfigErorr
         self._outputfile = config_value[4]
-        self._is_perfect = bool(config_value[5].capitalize())
+        self._is_perfect = config_value[5].strip() == "True"
 
     # def describe_42(self) -> None:
     #     if self._width < 7 or self._height < 5:
@@ -71,7 +71,7 @@ class MazeGenerator():
                     # 1の時に壁を意味している
 
     def fetch_random_cell_num(self) -> int:
-        return random.choice(self._cell.keys())
+        return random.choice(list(self._cell.keys()))
 
     def varidate(self, cell1_num: int, cell2_num: int) -> tuple[
             tuple,
@@ -83,26 +83,26 @@ class MazeGenerator():
             for coordinate2 in cell2_coordinates:
                 if coordinate1[0] - coordinate2[0] == 1:
                     if not all(
-                            (coordinate1[0] - coordinate2[0] == 1 or -1),
-                            (coordinate1[1] - coordinate2[1] == 1 or -1)):
+                            (coordinate1[0] - coordinate2[0] in (1, -1),
+                             coordinate1[1] - coordinate2[1] in (1, -1))):
                         if self._birdview_2[coordinate1[0]*2 - 1] == 1:
                             return coordinate1, coordinate2, 0
                 if coordinate1[0] - coordinate2[0] == -1:
                     if not all(
-                            (coordinate1[0] - coordinate2[0] == 1 or -1),
-                            (coordinate1[1] - coordinate2[1] == 1 or -1)):
+                            (coordinate1[0] - coordinate2[0] in (1, -1),
+                             coordinate1[1] - coordinate2[1] in (1, -1))):
                         if self._birdview_2[coordinate2[0]*2 - 1] == 1:
                             return coordinate1, coordinate2, 0
                 if coordinate1[1] - coordinate2[1] == 1:
                     if not all(
-                            (coordinate1[0] - coordinate2[0] == 1 or -1),
-                            (coordinate1[1] - coordinate2[1] == 1 or -1)):
+                            (coordinate1[0] - coordinate2[0] in (1, -1),
+                             coordinate1[1] - coordinate2[1] in (1, -1))):
                         if self._birdview_2[coordinate1[1]*2 - 1] == 1:
                             return coordinate1, coordinate2, 0
                 if coordinate1[1] - coordinate2[1] == -1:
                     if not all(
-                            (coordinate1[0] - coordinate2[0] == 1 or -1),
-                            (coordinate1[1] - coordinate2[1] == 1 or -1)):
+                            (coordinate1[0] - coordinate2[0] in (1, -1),
+                             coordinate1[1] - coordinate2[1] in (1, -1))):
                         if self._birdview_2[coordinate2[0]*2 - 1] == 1:
                             return coordinate1, coordinate2, 0
 
@@ -132,13 +132,13 @@ class MazeGenerator():
 
     def manage_cell_num(self, key1: int, key2: int) -> None:
         if key1 < key2:
-            self._cell[key1].append[self._cell[key2]]
+            self._cell[key1].extend(self._cell[key2])
             del self._cell[key2]
         else:
-            self._cell[key2].append[self._cell[key1]]
+            self._cell[key2].extend(self._cell[key1])
             del self._cell[key1]
 
-    def is_maze(self) -> bool:
+    def is_a_maze(self) -> bool:
         if len(self._cell) == 1:
             return True
         else:
@@ -148,11 +148,11 @@ class MazeGenerator():
         output: str = ""
         for y in range(self._height):
             for x in range(self._width):
-                output = output+str(self._birdview_16[(x, y)])
+                output = output+format(self._birdview_16[(x, y)], "x")
             output = output+"\n"
 
         try:
-            with open(self._outputfile) as fd:
+            with open(self._outputfile, "w") as fd:
                 fd.write(output)
         except Exception as e:
             print(e)
@@ -173,11 +173,13 @@ if __name__ == "__main__":
                 int] | None = tst_gen.varidate(key1, key2)
 
             if result is not None:
-                if result[3] == 0:
+                if result[2] == 0:
                     tst_gen.horz_break(result)
                 else:
                     tst_gen.vert_break(result)
-            tst_gen.manage_cell_num(key1, key2)
-            if tst_gen.is_maze():
+                tst_gen.manage_cell_num(key1, key2)
+            if tst_gen.is_a_maze():
                 break
         tst_gen.save_a_maze()
+
+    main()
