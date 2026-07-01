@@ -4,8 +4,9 @@ import sys
 import random
 from collections import deque
 
+
 class ConfigErorr(Exception):
-    def __init__(self, message: str = "Config Error") -> None:
+    def __init__(self, message: str = "Configuration Error") -> None:
         super().__init__(message)
 
 
@@ -32,6 +33,12 @@ class MazeGenerator():
             configs[key_value[0]] = int(key_value[1])
         if len(configs.keys()) != 6:
             raise ConfigErorr
+        for conf in configs.keys():
+            if conf not in [
+                "WIDTH", "HEGHT", "ENTRY",
+                "EXIT", "PERFECT", "OUTPUT_FILE"
+                    ]:
+                raise ConfigErorr
         self._width = int(configs["WIDTH"])
         if self._width < 2:
             raise ConfigErorr
@@ -52,7 +59,7 @@ class MazeGenerator():
                 or self._exit[1] < 0 or self._height <= self._exit[1]
         ):
             raise ConfigErorr
-        self._outputfile = configs["OUTPUTFILE"]
+        self._outputfile = configs["OUTPUT_FILE"]
         self._is_perfect = configs["PERFECT"] == "True"
 
     def set_view_default(self) -> None:
@@ -177,7 +184,7 @@ class MazeGenerator():
                     visited.add(neighbor)
                     came_from[neighbor] = (current, letter)
                     queue.append(neighbor)
-        
+
         if self._exit != self._entry and self._exit not in came_from:
             raise ConfigErorr
 
