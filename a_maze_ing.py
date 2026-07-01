@@ -4,7 +4,6 @@ import sys
 import random
 from collections import deque
 
-
 class ConfigErorr(Exception):
     def __init__(self, message: str = "Config Error") -> None:
         super().__init__(message)
@@ -23,37 +22,38 @@ class MazeGenerator():
         self._ans: list[str] = []
 
     def set_config(self) -> None:
+        configs: dict[str, str] = {}
         with open(sys.argv[1]) as fd:
             raw_configs: list[str] = fd.readlines()
         if len(raw_configs) != 6:
             raise ConfigErorr
-        config_value: list[str] = []
         for cnf in raw_configs:
-            config_value.append(cnf.rstrip("\n").split("=")[1])
-        if len(config_value) != 6:
+            key_value: list[str] = cnf.rstrip("\n").split("=")
+            configs[key_value[0]] = int(key_value[1])
+        if len(configs.keys()) != 6:
             raise ConfigErorr
-        self._width = int(config_value[0])
+        self._width = int(configs["WIDTH"])
         if self._width < 2:
             raise ConfigErorr
-        self._height = int(config_value[1])
+        self._height = int(configs["HEIGHT"])
         if self._height < 2:
             raise ConfigErorr
-        entry: list[str] = (config_value[2]).split(",")
+        entry: list[str] = (configs["ENTRY"]).split(",")
         self._entry = int(entry[0]), int(entry[1])
         if (
                 self._entry[0] < 0 or self._width <= self._entry[0]
                 or self._entry[1] < 0 or self._height <= self._entry[1]
         ):
             raise ConfigErorr
-        exit: list[str] = (config_value[3]).split(",")
+        exit: list[str] = (configs["EXIT"]).split(",")
         self._exit = int(exit[0]), int(exit[1])
         if (
                 self._exit[0] < 0 or self._width <= self._exit[0]
                 or self._exit[1] < 0 or self._height <= self._exit[1]
         ):
             raise ConfigErorr
-        self._outputfile = config_value[4]
-        self._is_perfect = config_value[5].strip() == "True"
+        self._outputfile = configs["OUTPUTFILE"]
+        self._is_perfect = configs["PERFECT"] == "True"
 
     def set_view_default(self) -> None:
         s: int = self._width/2
