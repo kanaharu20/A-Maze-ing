@@ -53,18 +53,27 @@ class MazeGenerator():
         self._outputfile = config_value[4]
         self._is_perfect = config_value[5].strip() == "True"
 
-    # def describe_42(self) -> None:
-    #     if self._width < 7 or self._height < 5:
-    #         return
-    #     center_x: int = self._width/2
-    #     centor_y: int = self._height/2
-
-
     def set_view_default(self) -> None:
-        for y in range(self._height):
-            for x in range(self._width):
-                self._birdview_16[x, y] = 15
-                self._cell[y * self._width + x] = [(x, y)]
+        s: int = self._width/2
+        t: int = self._height/2
+        if self._width >= 7 or self._height >= 5:
+            forty_two: list[tuple] = [
+                (s - 3, t - 2), (s + 1, t - 2), (s + 2, t - 2),
+                (s + 3, t - 2), (s - 3, t - 1), (s + 3, t - 1),
+                (s - 3, t), (s - 2, t), (s - 1, t), (s + 1, t),
+                (s + 2, t), (s + 3, t), (s - 1, t + 1), (s + 1, t + 1),
+                (s - 1, t + 2), (s + 1, t + 2), (s + 2, t + 2), (s + 3, t + 2)
+            ]
+            for y in range(self._height):
+                for x in range(self._width):
+                    self._birdview_16[x, y] = 15
+                    if not (x, y) in forty_two:
+                        self._cell[y * self._width + x] = [(x, y)]
+        else:
+            for y in range(self._height):
+                for x in range(self._width):
+                    self._birdview_16[x, y] = 15
+                    self._cell[y * self._width + x] = [(x, y)]
 
     def fetch_random_cell_num(self) -> int:
         return random.choice(list(self._cell.keys()))
