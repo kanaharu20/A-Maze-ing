@@ -2,6 +2,7 @@
 
 import sys
 import random
+from collections import deque
 
 
 class ConfigErorr(Exception):
@@ -19,6 +20,7 @@ class MazeGenerator():
         self._exit: tuple[int, int]
         self._outputfile: str
         self._is_perfect: bool
+        self._ans: list[str] = []
 
     def set_config(self) -> None:
         with open(sys.argv[1]) as fd:
@@ -127,18 +129,55 @@ class MazeGenerator():
         output: str = ""
         for y in range(self._height):
             for x in range(self._width):
-                output = output+format(self._birdview_16[(x, y)], "x")
+                output = output+format(self._birdview_16[(x, y)], "X")
             output = output+"\n"
         output = output+"\n"
         output = output+f"{self._entry[0]},{self._entry[1]}\n"
         output = output+f"{self._exit[0]},{self._exit[1]}\n"
-        #ここに解法を記述する
+        output = output+f"{"".join(self._ans)}\n"
         print(output, end="")
         try:
             with open(self._outputfile, "w") as fd:
                 fd.write(output)
         except Exception as e:
             print(e)
+
+    def solve_bfs(self) -> None:
+        # 1=N, 2=E, 4=S, 8=W
+        directions: dict[int, tuple[str, tuple[int, int]]] = {
+            1: ("N", (0, -1)),
+            2: ("E", (1, 0)),
+            4: ("S", (0, 1)),
+            8: ("W", (-1, 0)),
+        }
+
+        queue: deque[tuple[int, int]] = deque([self._entry])
+        visited: set[tuple[int, int]] = {self._entry}
+        came_from: dict[tuple[int, int], tuple[tuple[int, int], str]] = {}
+
+        while queue:
+            current: tuple[int, int] = queue.popleft()
+            if current == self._exit:
+                break
+            walls: int = self._birdview_16[current]
+            for bit, (letter, (dx, dy)) in directions.items():
+                if walls & bit:
+                    continue
+                neighbor: tuple[int, int] = (current[0] + dx, current[1] + dy)
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    came_from[neighbor] = (current, letter)
+                    queue.append(neighbor)
+        
+        if self._exit != self._entry and self._exit not in came_from:
+            raise ConfigErorr
+
+        node: tuple[int, int] = self._exit
+        while node != self._entry:
+            previous, letter = came_from[node]
+            self._ans.append(letter)
+            node = previous
+        self._ans.reverse()
 
 
 if __name__ == "__main__":
@@ -166,6 +205,7 @@ if __name__ == "__main__":
                     tst_gen.manage_cell_num(key1, key2)
                 if tst_gen.is_a_maze():
                     break
+            tst_gen.solve_bfs()
             tst_gen.save_a_maze()
         except Exception as e:
             print(e)
