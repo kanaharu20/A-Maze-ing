@@ -56,6 +56,9 @@ class MazeGenerator():
     # def describe_42(self) -> None:
     #     if self._width < 7 or self._height < 5:
     #         return
+    #     center_x: int = self._width/2
+    #     centor_y: int = self._height/2
+
 
     def set_view_default(self) -> None:
         for y in range(self._height):
@@ -141,27 +144,30 @@ class MazeGenerator():
 if __name__ == "__main__":
     def main() -> None:
         tst_gen: MazeGenerator = MazeGenerator()
-        tst_gen.set_config()
-        tst_gen.set_view_default()
-        while True:
-            key1: int = tst_gen.fetch_random_cell_num()
-            key2: int = tst_gen.fetch_random_cell_num()
-            if key1 == key2:
-                continue
+        try:
+            tst_gen.set_config()
+            tst_gen.set_view_default()
+            while True:
+                key1: int = tst_gen.fetch_random_cell_num()
+                key2: int = tst_gen.fetch_random_cell_num()
+                if key1 == key2:
+                    continue
 
-            result: tuple[
-                tuple,
-                tuple,
-                int] | None = tst_gen.varidate(key1, key2)
+                result: tuple[
+                    tuple,
+                    tuple,
+                    int] | None = tst_gen.varidate(key1, key2)
 
-            if result is not None:
-                if result[2] == 0:
-                    tst_gen.horz_break(result)
-                else:
-                    tst_gen.vert_break(result)
-                tst_gen.manage_cell_num(key1, key2)
-            if tst_gen.is_a_maze():
-                break
-        tst_gen.save_a_maze()
+                if result is not None:
+                    if result[2] == 0:
+                        tst_gen.horz_break(result)
+                    else:
+                        tst_gen.vert_break(result)
+                    tst_gen.manage_cell_num(key1, key2)
+                if tst_gen.is_a_maze():
+                    break
+            tst_gen.save_a_maze()
+        except Exception as e:
+            print(e)
 
     main()
